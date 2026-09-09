@@ -21,6 +21,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - uses: android-actions/setup-android@v4
+        with:
+          cmdline-tools-version: 12266719
+          packages: ''
       - name: Install pinned Android inspection tools
         run: sdkmanager 'build-tools;36.0.0' 'cmdline-tools;19.0'
       - name: Read the requested promotion record
