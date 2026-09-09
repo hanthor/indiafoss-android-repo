@@ -29,10 +29,27 @@ Unit tests exercise policy decisions and the Android-tool adapter with injected
 results. They do not demonstrate real APK signature verification, an F-Droid
 index, or device upgrades.
 
+`stage_release.py` checks the source commit's required push-to-main workflows,
+using the newest attempt for each workflow. It checks release/asset ownership,
+then downloads, verifies and stages an APK under its package/version filename.
+An existing file is re-verified, never overwritten. Downloads are limited to
+256 MiB and an incomplete or rejected download leaves no staged APK.
+
+```sh
+python3 stage_release.py promotion.json --history history.json --destination staging
+```
+
+This requires GitHub CLI read access and the Android SDK tools. The promotion
+record's commit is a maintainer assertion: green CI and release ownership alone
+do not cryptographically attest that the APK was built from that commit. Artifact
+attestations or a verified build-to-release record are still needed before
+unattended promotion. API, staging and adapter tests use fixtures; real release
+integration remains pending.
+
 ## Next steps
 
-1. Verify release/asset ownership and green CI at the recorded source commit.
-2. Fetch and retain immutable versioned release artifacts; exercise the verifier
+1. Bind the APK to its declared build commit using verified release provenance.
+2. Exercise fetching and immutable staging plus the verifier
    against real signed APKs with pinned Android SDK tools in CI.
 3. Add app metadata and a pinned fdroidserver environment, then generate and
    inspect an unsigned catalogue.
