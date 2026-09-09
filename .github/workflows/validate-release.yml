@@ -1,0 +1,50 @@
+name: Validate real release APK
+on:
+  workflow_dispatch:
+    inputs:
+      promotion_record:
+        description: Exact promotion record JSON (package, source, commit, release_id, asset_id, version_code, sha256)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install pinned Android inspection tools
+        run: sdkmanager 'build-tools;36.0.0' 'cmdline-tools;19.0'
+      - name: Read the requested promotion record
+        env:
+          PROMOTION_RECORD: ${{ inputs.promotion_record }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          record = json.loads(os.environ['PROMOTION_RECORD'])
+          Path('promotion.json').write_text(json.dumps(record))
+          PY
+      - name: Verify source CI, release ownership and actual signed APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python stage_release.py promotion.json --history history.json \
+            --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner" \
+            --apkanalyzer "$ANDROID_HOME/cmdline-tools/19.0/bin/apkanalyzer"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-release-input
+          path: |
+            staging/*.apk
+            promotion.json
+          if-no-files-found: error
+          retention-days: 7

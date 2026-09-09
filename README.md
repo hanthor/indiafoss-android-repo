@@ -63,3 +63,12 @@ The Companion APK is currently available from its GitHub nightly release.
 
 Tool references: [APK Analyzer](https://developer.android.com/tools/apkanalyzer),
 [apksigner](https://developer.android.com/tools/apksigner).
+
+## Real APK integration
+
+The manually triggered **Validate real release APK** workflow installs Android
+Build Tools 36.0.0 and Command-Line Tools 19.0, then runs staging against the
+provided exact promotion record. It uploads a short-lived validated input
+artifact, not a public catalogue. It has no signing or deployment permissions.
+`history.json` is empty because no versions have been promoted yet; update it
+only as part of the future durable promotion transaction.
