@@ -1,0 +1,10 @@
+{
+  "org.indiafoss.companion.nativeapp": {
+    "source": "hanthor/indiafoss-companion",
+    "certificate_sha256": "6eeeafa8b7ea0178388f9f18704f1e8b631dba798a763d0e75e20b4d9e9b2db1"
+  },
+  "org.indiafoss.chat": {
+    "source": "hanthor/indiafoss-chat-android",
+    "certificate_sha256": "137cde918f4b669ef9eea1985531af0f43b5dd98ca9db17032894370bddf5175"
+  }
+}

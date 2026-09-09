@@ -1,7 +1,48 @@
 # IndiaFOSS Android repository
 
-Scaffolding for a maintainer-run F-Droid repository for Companion and Chat.
-No catalogue is published yet.
+Work in progress: this repository does **not** serve an F-Droid catalogue yet.
+It will distribute reviewed Companion and Chat APKs without changing their
+application signing identities. The index will use a separate signing key.
 
-[Implementation plan](https://github.com/hanthor/indiafoss-companion/blob/main/docs/tasks/own-fdroid-repository.md)
+[Implementation plan and acceptance criteria](https://github.com/hanthor/indiafoss-companion/blob/main/docs/tasks/own-fdroid-repository.md)
 · [Tracking issue](https://github.com/hanthor/indiafoss-companion/issues/291)
+
+## Implemented
+
+`apps.json` records the allowed packages, source repositories and public APK
+certificate fingerprints. `verify_apk.py` checks a local APK's hash, signature,
+package, version and debuggable status against an exact promotion record and
+previously promoted versions. It calls Android SDK `apksigner` and `apkanalyzer`;
+missing tools or failed signature verification stop validation.
+
+A record contains `package`, `source` (`owner/repository`), a 40-character
+`commit`, numeric `release_id`, `asset_id`, `version_code`, and lowercase APK
+`sha256`. History is a JSON list of previous records; use `[]` only for the first
+promotion. The verifier is read-only and does not copy, sign or publish anything.
+
+```sh
+python3 -m unittest discover -s tests -v
+python3 verify_apk.py promotion.json staging/app.apk --history history.json
+```
+
+Unit tests exercise policy decisions and the Android-tool adapter with injected
+results. They do not demonstrate real APK signature verification, an F-Droid
+index, or device upgrades.
+
+## Next steps
+
+1. Verify release/asset ownership and green CI at the recorded source commit.
+2. Fetch and retain immutable versioned release artifacts; exercise the verifier
+   against real signed APKs with pinned Android SDK tools in CI.
+3. Add app metadata and a pinned fdroidserver environment, then generate and
+   inspect an unsigned catalogue.
+4. Provision a recoverable index key and trusted publication workflow; publish
+   only generated public files, never signing config or keys.
+5. Verify the signed index and rehearse direct-APK-to-repository upgrades with
+   attendee data retained. Add the fingerprint-bearing PWA link only afterwards.
+
+Chat remains excluded from publication until a signed public release is verified.
+The Companion APK is currently available from its GitHub nightly release.
+
+Tool references: [APK Analyzer](https://developer.android.com/tools/apkanalyzer),
+[apksigner](https://developer.android.com/tools/apksigner).
