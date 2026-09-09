@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.apk
+*.jks
+*.p12
+*.keystore
+config.yml
+repo/
+archive/
+staging/
