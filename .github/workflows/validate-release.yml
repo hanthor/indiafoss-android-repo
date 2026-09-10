@@ -13,15 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v4
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
           cmdline-tools-version: 12266719
           packages: ''
@@ -44,7 +46,7 @@ jobs:
           python stage_release.py promotion.json --history history.json \
             --apksigner "$ANDROID_HOME/build-tools/36.0.0/apksigner" \
             --apkanalyzer "$ANDROID_HOME/cmdline-tools/19.0/bin/apkanalyzer"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: verified-release-input
           path: |
@@ -64,6 +66,9 @@ jobs:
           python build_catalogue.py --staging staging --history history.json \
             --record promotion.json --workdir build
           cd build && fdroid lint
+      - name: Content checks of the unsigned preview (signature explicitly NOT verified)
+        run: |
+          python verify_index.py build/repo --history history.json --record promotion.json --expect-unsigned
       - name: Check no secrets or key material in the output
         run: |
           if find build/repo -name 'config.yml' -o -name '*.p12' -o -name '*.jks' -o -name '*.keystore' | grep .; then
@@ -71,7 +76,7 @@ jobs:
           fi
           test ! -e build/repo/index-v1.jar
           test ! -e build/repo/entry.jar
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: unsigned-preview-catalogue
           path: build/repo

@@ -1,0 +1,14 @@
+{
+  "repository": {
+    "address": "https://example.org/fdroid/repo",
+    "fingerprint": "76ee8c885a46a158df606692b94b76ca08d5e85be9c0c96a599c20af0ec45f82"
+  },
+  "org.example.app": {
+    "source": "owner/app",
+    "certificate_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "required_workflows": [
+      ".github/workflows/ci.yml"
+    ],
+    "published": true
+  }
+}

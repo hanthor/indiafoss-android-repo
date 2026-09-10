@@ -23,7 +23,7 @@ repo_description: >-
 # Keep every promoted version in repo/; nothing is moved to archive/.
 archive_older: 0
 
-# --- Index signing (README step 4, still open) ---------------------------
+# --- Index signing (README: key provisioning) ----------------------------
 # The repository-index key is separate from both application signing keys and
 # is generated ONCE, backed up, and never regenerated on an ordinary build.
 # Uncomment and fill in on the trusted publisher only. build_catalogue.py fails
@@ -35,3 +35,8 @@ archive_older: 0
 # keystorepass: use-an-environment-variable-or-a-secret-store
 # keypass: use-an-environment-variable-or-a-secret-store
 # keydname: CN=IndiaFOSS Preview repository index, O=IndiaFOSS Companion community
+#
+# The public SHA-256 fingerprint of that key's certificate is recorded in
+# apps.json under repository.fingerprint (lowercase hex, no colons). It is the
+# value verify_index.py checks entry.jar against and the value clients pin via
+# the fdroidrepos:// link; the publish workflow refuses to run while it is empty.

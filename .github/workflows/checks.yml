@@ -5,38 +5,58 @@ permissions:
 jobs:
   policy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.12'
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        # jarsigner for the real-signature test in tests/test_verify_index.py
+        with:
+          distribution: temurin
+          java-version: '17'
       - run: python -m unittest discover -s tests -v
-      - run: python -m compileall -q verify_apk.py stage_release.py build_catalogue.py tests
+      - run: python -m compileall -q verify_apk.py stage_release.py build_catalogue.py verify_index.py publish_site.py tests
       - name: Refuse APKs, keystores and publisher config in git
         run: |
           tracked="$(git ls-files -- '*.apk' '*.jks' '*.p12' '*.keystore' '*.pem' '*.key' \
-            'config.yml' '**/config.yml' 'repo/**' 'build/**' 'staging/**')"
+            'config.yml' '**/config.yml' 'repo/**' 'build/**' 'staging/**' 'site/**')"
           if [ -n "$tracked" ]; then
             echo "Forbidden tracked files:"; echo "$tracked"; exit 1
           fi
-          for path in repo/x.apk build/repo/index-v1.json config.yml index.p12 staging/x.apk; do
+          for path in repo/x.apk build/repo/index-v1.json config.yml index.p12 staging/x.apk site/fdroid/repo/entry.jar records/0.json; do
             git check-ignore -q "$path" || { echo "$path is not ignored"; exit 1; }
           done
+      - name: The recorded repository fingerprint must be empty or a real fingerprint
+        run: |
+          python - <<'PY'
+          import json, re
+          repository = json.load(open("apps.json")).get("repository", {})
+          fingerprint = repository.get("fingerprint", "")
+          assert fingerprint == "" or re.fullmatch(r"[0-9a-f]{64}", fingerprint), fingerprint
+          assert repository.get("address", "").startswith("https://"), repository
+          print("fingerprint recorded" if fingerprint else "no index key fingerprint recorded yet (unsigned)")
+          PY
   unsigned-catalogue:
     # Generates an UNSIGNED preview index from a fixture APK with the pinned
     # fdroidserver. No signing key, no deployment; the result is only an artifact.
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.12'
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v4
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
           cmdline-tools-version: 12266719
           packages: ''
@@ -61,6 +81,19 @@ jobs:
             --policy tests/fixtures/catalogue/policy.json \
             --metadata tests/fixtures/catalogue/metadata --workdir build
           cd build && fdroid lint
+      - name: verify_index.py must refuse to pass an unsigned catalogue by default
+        run: |
+          set +e
+          python verify_index.py build/repo --history history.json \
+            --record tests/fixtures/catalogue/record.json --policy tests/fixtures/catalogue/policy.json
+          status=$?
+          set -e
+          test "$status" -eq 2 || { echo "expected exit 2 (unsigned catalogue), got $status"; exit 1; }
+      - name: Content checks of the unsigned preview (explicitly expected unsigned)
+        run: |
+          python verify_index.py build/repo --history history.json \
+            --record tests/fixtures/catalogue/record.json --policy tests/fixtures/catalogue/policy.json \
+            --expect-unsigned
       - name: Check no secrets or key material in the output
         run: |
           if find build/repo -name 'config.yml' -o -name '*.p12' -o -name '*.jks' -o -name '*.keystore' | grep .; then
@@ -68,9 +101,89 @@ jobs:
           fi
           test ! -e build/repo/index-v1.jar
           test ! -e build/repo/entry.jar
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: unsigned-fixture-catalogue
           path: build/repo
           if-no-files-found: error
           retention-days: 7
+  signed-rehearsal:
+    # Rehearses the whole signed path with a THROWAWAY key generated in this job
+    # and destroyed with the runner: sign the fixture catalogue, verify it against
+    # the throwaway fingerprint, assemble the deploy set and verify that too.
+    # Nothing is uploaded or deployed; the throwaway fingerprint is never recorded.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          cmdline-tools-version: 12266719
+          packages: ''
+      - name: Install pinned Android build tools and fdroidserver
+        run: |
+          sdkmanager 'build-tools;36.0.0'
+          python -m pip install --require-hashes -r requirements-fdroidserver.txt
+      - name: Stage the fixture APK from the hash-pinned fdroidserver sdist
+        run: |
+          python -m pip download --no-deps --no-binary :all: fdroidserver==2.4.5 -d sdist
+          echo "f9b52646264c732678e32e37e23a995db20cc61d45622dda5830ce23255547f4  sdist/fdroidserver-2.4.5.tar.gz" | sha256sum -c -
+          mkdir -p staging
+          tar -xzf sdist/fdroidserver-2.4.5.tar.gz -C staging --strip-components=3 \
+            fdroidserver-2.4.5/tests/repo/com.example.test.helloworld_1.apk
+      - name: Create a throwaway index key outside the checkout and record its fingerprint in a scratch policy
+        run: |
+          umask 077
+          keytool -genkeypair -keystore "$RUNNER_TEMP/throwaway.p12" -storetype PKCS12 \
+            -storepass throwaway -keypass throwaway -alias throwaway -keyalg RSA -keysize 4096 \
+            -validity 1 -dname "CN=THROWAWAY CI rehearsal key - not the repository key"
+          keytool -exportcert -keystore "$RUNNER_TEMP/throwaway.p12" -storepass throwaway \
+            -alias throwaway -file "$RUNNER_TEMP/throwaway.der"
+          fingerprint="$(sha256sum "$RUNNER_TEMP/throwaway.der" | cut -d' ' -f1)"
+          python - "$fingerprint" <<'PY'
+          import json, sys
+          from pathlib import Path
+          policy = json.load(open("tests/fixtures/catalogue/policy.json"))
+          policy["repository"] = {"address": "https://hanthor.github.io/indiafoss-android-repo/fdroid/repo",
+                                  "fingerprint": sys.argv[1]}
+          Path("rehearsal-policy.json").write_text(json.dumps(policy))
+          config = Path("config.yml.example").read_text()
+          import os
+          temp = os.environ["RUNNER_TEMP"]
+          config += f'\nrepo_keyalias: throwaway\nkeystore: "{temp}/throwaway.p12"\nkeystorepass: throwaway\nkeypass: throwaway\n'
+          Path(temp, "config.yml").write_text(config)
+          PY
+      - name: Sign, verify, assemble and verify the deploy set
+        run: |
+          export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"
+          python build_catalogue.py --staging staging --history history.json \
+            --record tests/fixtures/catalogue/record.json --policy tests/fixtures/catalogue/policy.json \
+            --metadata tests/fixtures/catalogue/metadata --workdir build --config "$RUNNER_TEMP/config.yml"
+          (cd build && fdroid lint)
+          rm -f build/config.yml "$RUNNER_TEMP/config.yml"
+          python verify_index.py build/repo --history history.json \
+            --record tests/fixtures/catalogue/record.json --policy rehearsal-policy.json
+          python publish_site.py build/repo site
+          python verify_index.py site/fdroid/repo --history history.json \
+            --record tests/fixtures/catalogue/record.json --policy rehearsal-policy.json --deployable
+          test ! -e site/fdroid/repo/status
+          ! find site -name 'config.yml' -o -name '*.p12' | grep .
+      - name: A wrong recorded fingerprint must be rejected
+        run: |
+          sed 's/"fingerprint": "[0-9a-f]\{8\}/"fingerprint": "00000000/' rehearsal-policy.json > wrong-policy.json
+          if python verify_index.py site/fdroid/repo --history history.json \
+              --record tests/fixtures/catalogue/record.json --policy wrong-policy.json; then
+            echo "verify_index.py accepted a wrong fingerprint"; exit 1
+          fi
+      - name: Destroy the throwaway key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/throwaway.p12" "$RUNNER_TEMP/throwaway.der" "$RUNNER_TEMP/config.yml" build/config.yml

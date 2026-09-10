@@ -1,0 +1,20 @@
+[
+  {
+    "package": "org.example.app",
+    "source": "owner/app",
+    "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "release_id": 10,
+    "asset_id": 20,
+    "version_code": 1,
+    "sha256": "caccb63c59892e0445caf3642f769e56034c994a4c4aba3c0f13fb760bc04d00"
+  },
+  {
+    "package": "org.example.app",
+    "source": "owner/app",
+    "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "release_id": 20,
+    "asset_id": 40,
+    "version_code": 2,
+    "sha256": "6d4f0a1063a5940cb19337ade2d37f37f4ccba1048a223dbdc313227630239ff"
+  }
+]
