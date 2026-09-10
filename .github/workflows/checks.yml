@@ -11,4 +11,66 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m unittest discover -s tests -v
-      - run: python -m compileall -q verify_apk.py stage_release.py tests
+      - run: python -m compileall -q verify_apk.py stage_release.py build_catalogue.py tests
+      - name: Refuse APKs, keystores and publisher config in git
+        run: |
+          tracked="$(git ls-files -- '*.apk' '*.jks' '*.p12' '*.keystore' '*.pem' '*.key' \
+            'config.yml' '**/config.yml' 'repo/**' 'build/**' 'staging/**')"
+          if [ -n "$tracked" ]; then
+            echo "Forbidden tracked files:"; echo "$tracked"; exit 1
+          fi
+          for path in repo/x.apk build/repo/index-v1.json config.yml index.p12 staging/x.apk; do
+            git check-ignore -q "$path" || { echo "$path is not ignored"; exit 1; }
+          done
+  unsigned-catalogue:
+    # Generates an UNSIGNED preview index from a fixture APK with the pinned
+    # fdroidserver. No signing key, no deployment; the result is only an artifact.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+        with:
+          cmdline-tools-version: 12266719
+          packages: ''
+      - name: Install pinned Android build tools and fdroidserver
+        run: |
+          sdkmanager 'build-tools;36.0.0'
+          python -m pip install --require-hashes -r requirements-fdroidserver.txt
+          fdroid --version
+      - name: Stage the fixture APK from the hash-pinned fdroidserver sdist
+        run: |
+          python -m pip download --no-deps --no-binary :all: fdroidserver==2.4.5 -d sdist
+          echo "f9b52646264c732678e32e37e23a995db20cc61d45622dda5830ce23255547f4  sdist/fdroidserver-2.4.5.tar.gz" | sha256sum -c -
+          mkdir -p staging
+          tar -xzf sdist/fdroidserver-2.4.5.tar.gz -C staging --strip-components=3 \
+            fdroidserver-2.4.5/tests/repo/com.example.test.helloworld_1.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs staging/com.example.test.helloworld_1.apk
+      - name: Generate and inspect the unsigned fixture catalogue
+        run: |
+          export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"
+          python build_catalogue.py --staging staging --history history.json \
+            --record tests/fixtures/catalogue/record.json \
+            --policy tests/fixtures/catalogue/policy.json \
+            --metadata tests/fixtures/catalogue/metadata --workdir build
+          cd build && fdroid lint
+      - name: Check no secrets or key material in the output
+        run: |
+          if find build/repo -name 'config.yml' -o -name '*.p12' -o -name '*.jks' -o -name '*.keystore' | grep .; then
+            echo "Secret-looking files in catalogue output"; exit 1
+          fi
+          test ! -e build/repo/index-v1.jar
+          test ! -e build/repo/entry.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-fixture-catalogue
+          path: build/repo
+          if-no-files-found: error
+          retention-days: 7

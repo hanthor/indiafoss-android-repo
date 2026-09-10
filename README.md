@@ -25,9 +25,9 @@ python3 -m unittest discover -s tests -v
 python3 verify_apk.py promotion.json staging/app.apk --history history.json
 ```
 
-Unit tests exercise policy decisions and the Android-tool adapter with injected
-results. They do not demonstrate real APK signature verification, an F-Droid
-index, or device upgrades.
+Unit tests exercise policy decisions and the Android-tool and fdroid adapters
+with injected results. They do not demonstrate real APK signature verification,
+a signed F-Droid index, or device upgrades.
 
 `stage_release.py` checks the source commit's required push-to-main workflows,
 using the newest attempt for each workflow. It checks release/asset ownership,
@@ -46,17 +46,61 @@ attestations or a verified build-to-release record are still needed before
 unattended promotion. API, staging and adapter tests use fixtures; real release
 integration remains pending.
 
+## Unsigned catalogue generation
+
+`metadata/<package>.yml` holds fdroidserver app metadata (names, summaries,
+descriptions, source, issue and changelog links, licence, categories) taken from
+the source repositories. Companion is labelled a reviewed **Preview**. Chat has
+metadata only: it is `Disabled` there and `"published": false` in `apps.json`,
+so `fdroid update` omits it and `build_catalogue.py` refuses its APKs until its
+signed public APK and upgrade path are verified. `config/categories.yml` defines
+the categories the metadata uses.
+
+`requirements-fdroidserver.txt` pins fdroidserver 2.4.5 with hashes for every
+dependency; install it with `--require-hashes`. `config.yml.example` documents
+the repository URL, name and description and the index-key settings that a
+publisher would fill in. It contains no key and is the only config file that
+may be committed.
+
+`build_catalogue.py` takes staged APKs from `stage_release.py`'s destination,
+matches each to an exact promotion record from `history.json` or `--record`,
+re-validates the record and the bytes, refuses unpublished packages, copies the
+APKs and metadata into a work directory, runs `fdroid update --pretty`, then
+checks the generated index: every listed version must be a staged one with the
+recorded SHA-256 and policy signer, every file must exist with those bytes, the
+suggested version must be a staged one, and no signing material may be in the
+output. Without `--config` the index is UNSIGNED and carries an ephemeral
+placeholder key whose fingerprint must never be published. With a `--config`
+that names `repo_keyalias`/`keystore`, the keystore and both passwords must be
+present and `index-v1.jar`/`entry.jar` must be produced, otherwise it fails.
+
+```sh
+python3 -m pip install --require-hashes -r requirements-fdroidserver.txt
+export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"   # apksigner for fdroid update
+python3 build_catalogue.py --staging staging --history history.json \
+  --record promotion.json --workdir build
+(cd build && fdroid lint)
+```
+
+`fdroid update` needs a JDK (`keytool`, `jar`) and `apksigner`. The **Repository
+checks** workflow generates an unsigned catalogue from a fixture APK taken from
+the hash-pinned fdroidserver source distribution (`tests/fixtures/catalogue/`)
+and uploads it as an artifact only; the manual real-APK workflow does the same
+with the staged Companion APK. Neither has keys or deployment permissions.
+`.gitignore` and a CI check keep `*.apk`, keystores, `config.yml`, `repo/`,
+`staging/` and `build/` out of git.
+
 ## Next steps
 
 1. Bind the APK to its declared build commit using verified release provenance.
 2. Exercise fetching and immutable staging plus the verifier
    against real signed APKs with pinned Android SDK tools in CI.
-3. Add app metadata and a pinned fdroidserver environment, then generate and
-   inspect an unsigned catalogue.
-4. Provision a recoverable index key and trusted publication workflow; publish
-   only generated public files, never signing config or keys.
-5. Verify the signed index and rehearse direct-APK-to-repository upgrades with
-   attendee data retained. Add the fingerprint-bearing PWA link only afterwards.
+3. Provision a recoverable index key and trusted publication workflow; publish
+   only generated public files, never signing config or keys. No key exists yet
+   and nothing is deployed.
+4. Verify the signed index against the separately recorded fingerprint and
+   rehearse direct-APK-to-repository upgrades with attendee data retained. Add
+   the fingerprint-bearing PWA link only afterwards.
 
 Chat remains excluded from publication until a signed public release is verified.
 The Companion APK is currently available from its GitHub nightly release.

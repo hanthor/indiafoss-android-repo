@@ -1,0 +1,31 @@
+# fdroidserver app metadata for IndiaFOSS Chat. Metadata only: Chat is NOT
+# published yet. Disabled below makes fdroid update omit it from the index,
+# and apps.json marks it "published": false so build_catalogue.py refuses its
+# APKs. Ordering per hanthor/indiafoss-companion#291: add Companion first;
+# include Chat only after its signed public APK and upgrade path are verified.
+# Remove Disabled and flip apps.json in the same reviewed change.
+Disabled: Not yet published; awaiting verified signed public APK and upgrade rehearsal (hanthor/indiafoss-companion#291)
+Categories:
+  - Internet
+License: AGPL-3.0-or-later
+AuthorName: IndiaFOSS Chat community
+WebSite: https://github.com/hanthor/indiafoss-chat-android
+SourceCode: https://github.com/hanthor/indiafoss-chat-android
+IssueTracker: https://github.com/hanthor/indiafoss-chat-android/issues
+Changelog: https://github.com/hanthor/indiafoss-chat-android/releases
+
+Name: IndiaFOSS Chat (Preview)
+Summary: Matrix messenger fork with conference handoff links and P2P mesh (preview)
+Description: |-
+  Preview build of IndiaFOSS Chat, an unofficial community fork of Element X
+  Android (Neutrino), renamed and re-identified as org.indiafoss.chat. It is
+  not produced or endorsed by Element or FOSS United and ships no Element
+  branding. Element is a trademark of Element Creations Ltd.
+
+  * Conference handoff links from the IndiaFOSS Companion open the normal user-profile and join screens; nothing is messaged or joined without a tap.
+  * The offline-first Companion (schedule, ranking, itinerary, map, contact cards) is hosted inside the app.
+  * End-to-end encryption on public Matrix homeservers via Element X.
+
+  Known limitations of this preview: the embedded Neutrino peer-to-peer mesh
+  is pre-alpha; installed-device interoperability, media and recovery still
+  require acceptance evidence. Android 7.0 or later.

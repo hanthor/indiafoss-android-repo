@@ -1,10 +1,16 @@
 __pycache__/
 *.pyc
+# Never commit APK bytes, signing material or publisher configuration.
 *.apk
 *.jks
 *.p12
 *.keystore
+*.pem
+*.key
 config.yml
+!config.yml.example
 repo/
 archive/
 staging/
+build/
+unsigned/

@@ -1,0 +1,39 @@
+# fdroidserver app metadata for the binary-only IndiaFOSS Preview catalogue.
+# Version data comes from the promoted APKs; no Builds entries are used.
+# CurrentVersionCode pins the reviewed recommended version. It is set by the
+# promotion transaction that also appends to history.json; until then the
+# newest staged version is suggested.
+Categories:
+  - Events
+  - Navigation
+License: AGPL-3.0-or-later
+AuthorName: IndiaFOSS Companion community
+WebSite: https://hanthor.github.io/indiafoss-companion/
+SourceCode: https://github.com/hanthor/indiafoss-companion
+IssueTracker: https://github.com/hanthor/indiafoss-companion/issues
+Changelog: https://github.com/hanthor/indiafoss-companion/releases
+
+Name: IndiaFOSS Companion (Preview)
+Summary: Offline conference schedule, ranking, itinerary and venue map (preview)
+Description: |-
+  Reviewed Preview build of the IndiaFOSS Companion, distributed by the
+  maintainers' own repository. This is not a stable release and it is not an
+  f-droid.org listing.
+
+  An offline-first companion for the IndiaFOSS conference. No account, no
+  tracking, no server: preferences, ratings, itinerary, notes and contacts
+  stay on the device.
+
+  * Now: every hall live with a progress bar and the minutes left in each talk, plus a countdown to your next session.
+  * Rank: resolve overlapping talks two at a time; a local Elo rating builds your personal itinerary.
+  * Map: the venue floor plan with live rooms, your position, and accessible indoor routing.
+  * Connect: a signed vCard QR to share exactly the contact details you choose.
+
+  Optional extras are off until enabled in Settings: Matrix conference rooms
+  via your existing account, and pre-alpha peer-to-peer chat over a local mesh.
+
+  This project and its implementation were generated with AI assistance. It is
+  an unofficial community project, not produced or endorsed by FOSS United.
+  Installing from this repository keeps the same package and signing
+  certificate as the direct APK download, so in-place updates are the intended
+  path; device upgrade evidence is still being collected.

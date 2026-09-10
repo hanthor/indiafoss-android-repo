@@ -1,0 +1,9 @@
+{
+  "package": "com.example.test.helloworld",
+  "source": "fdroid/fdroidserver",
+  "commit": "0000000000000000000000000000000000000000",
+  "release_id": 1,
+  "asset_id": 1,
+  "version_code": 1,
+  "sha256": "57c819fefaae8219c38d04cff7776495081a8e63a11783c0f7727c7bd2c16189"
+}

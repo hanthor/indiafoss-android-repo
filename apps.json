@@ -4,7 +4,8 @@
     "certificate_sha256": "6eeeafa8b7ea0178388f9f18704f1e8b631dba798a763d0e75e20b4d9e9b2db1",
     "required_workflows": [
       ".github/workflows/ci.yml"
-    ]
+    ],
+    "published": true
   },
   "org.indiafoss.chat": {
     "source": "hanthor/indiafoss-chat-android",
@@ -13,6 +14,7 @@
       ".github/workflows/tests.yml",
       ".github/workflows/quality.yml",
       ".github/workflows/build.yml"
-    ]
+    ],
+    "published": false
   }
 }

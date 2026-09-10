@@ -1,0 +1,10 @@
+{
+  "com.example.test.helloworld": {
+    "source": "fdroid/fdroidserver",
+    "certificate_sha256": "c3a5ca5465a7585a1bda30218ae4017083605e3576867aa897d724208d99696c",
+    "required_workflows": [
+      ".github/workflows/none.yml"
+    ],
+    "published": true
+  }
+}

@@ -11,7 +11,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -50,5 +50,30 @@ jobs:
           path: |
             staging/*.apk
             promotion.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Install pinned fdroidserver
+        run: |
+          python -m pip install --require-hashes -r requirements-fdroidserver.txt
+          fdroid --version
+      - name: Generate and inspect an UNSIGNED preview catalogue from the staged APK
+        # No index key is configured in CI: the index carries an ephemeral
+        # placeholder key and is uploaded as an artifact only. Not deployed.
+        run: |
+          export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"
+          python build_catalogue.py --staging staging --history history.json \
+            --record promotion.json --workdir build
+          cd build && fdroid lint
+      - name: Check no secrets or key material in the output
+        run: |
+          if find build/repo -name 'config.yml' -o -name '*.p12' -o -name '*.jks' -o -name '*.keystore' | grep .; then
+            echo "Secret-looking files in catalogue output"; exit 1
+          fi
+          test ! -e build/repo/index-v1.jar
+          test ! -e build/repo/entry.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-preview-catalogue
+          path: build/repo
           if-no-files-found: error
           retention-days: 7
