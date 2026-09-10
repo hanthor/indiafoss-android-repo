@@ -22,7 +22,8 @@ def digest(value):
 
 def validate_record(record, policy, history):
     package = record.get("package")
-    require(isinstance(package, str) and package in policy, "Package is not allowed")
+    require(isinstance(package, str) and package in policy and package != "repository",
+            "Package is not allowed")
     require(record.get("source") == policy[package]["source"], "Wrong source repository")
     require(digest(record.get("sha256")), "Invalid APK SHA-256")
     require(digest(policy[package]["certificate_sha256"]), "Invalid certificate policy")

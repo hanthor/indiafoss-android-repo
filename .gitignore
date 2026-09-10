@@ -14,3 +14,11 @@ archive/
 staging/
 build/
 unsigned/
+site/
+records/
+sdist/
+promotion.json
+rehearsal-policy.json
+wrong-policy.json
+# Throwaway-key test fixtures are the only JARs allowed in git.
+!tests/fixtures/index/**/*.jar
