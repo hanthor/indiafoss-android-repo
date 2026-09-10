@@ -1,0 +1,37 @@
+# fdroidserver configuration for the IndiaFOSS Preview catalogue.
+#
+# build_catalogue.py generates its own config.yml inside its work directory.
+# Without --config it creates an UNSIGNED preview with an ephemeral placeholder
+# public key. With --config PATH it copies the keys below and requires a real
+# index keystore. Copy this file to config.yml (git-ignored) only on the trusted
+# publisher; never commit config.yml, keystores or passwords.
+#
+# Layout used by fdroid update, relative to the work directory:
+#   config.yml         this file
+#   metadata/<pkg>.yml app names, descriptions and links (copied from git)
+#   repo/*.apk         exact promoted APKs copied from staging/
+#   repo/index-v1.json, index-v2.json, entry.json   generated index files
+#   repo/index-v1.jar, entry.jar                    signed index (signed mode only)
+
+repo_url: https://hanthor.github.io/indiafoss-android-repo/fdroid/repo
+repo_name: IndiaFOSS Preview
+repo_description: >-
+  Reviewed Preview builds of the IndiaFOSS Companion, published by the
+  maintainers. Same package and signing certificate as the direct APK download.
+  Not a stable release channel and not an f-droid.org listing.
+
+# Keep every promoted version in repo/; nothing is moved to archive/.
+archive_older: 0
+
+# --- Index signing (README step 4, still open) ---------------------------
+# The repository-index key is separate from both application signing keys and
+# is generated ONCE, backed up, and never regenerated on an ordinary build.
+# Uncomment and fill in on the trusted publisher only. build_catalogue.py fails
+# closed when repo_keyalias/keystore are set but the keystore file or the
+# passwords are missing.
+#
+# repo_keyalias: indiafoss-preview-index
+# keystore: /absolute/path/outside/the/checkout/index-key.p12
+# keystorepass: use-an-environment-variable-or-a-secret-store
+# keypass: use-an-environment-variable-or-a-secret-store
+# keydname: CN=IndiaFOSS Preview repository index, O=IndiaFOSS Companion community

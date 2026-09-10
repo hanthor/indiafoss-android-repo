@@ -1,0 +1,10 @@
+# CI fixture only: fdroidserver's own signed test APK, taken from the pinned sdist.
+Categories:
+  - Fixture
+License: Unlicense
+SourceCode: https://gitlab.com/fdroid/fdroidserver
+Name: Hello World fixture
+Summary: Fixture APK used to exercise unsigned catalogue generation
+Description: |-
+  Not an IndiaFOSS app. This entry exists so continuous integration can run
+  fdroid update against a small signed APK without touching real releases.

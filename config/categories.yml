@@ -1,0 +1,8 @@
+# Category definitions for fdroidserver (copied next to the generated config.yml).
+# Keys must match the Categories used in metadata/*.yml.
+Events:
+  name: Events
+Navigation:
+  name: Navigation
+Internet:
+  name: Internet
