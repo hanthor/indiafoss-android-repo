@@ -1,0 +1,61 @@
+{
+  "packages": {
+    "org.example.app": {
+      "metadata": {
+        "added": 1789000000000,
+        "lastUpdated": 1789000000000,
+        "license": "Unlicense",
+        "name": {
+          "en-US": "Fixture app"
+        },
+        "preferredSigner": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "versions": {
+        "6d4f0a1063a5940cb19337ade2d37f37f4ccba1048a223dbdc313227630239ff": {
+          "added": 1789000000000,
+          "file": {
+            "name": "/org.example.app_2.apk",
+            "sha256": "6d4f0a1063a5940cb19337ade2d37f37f4ccba1048a223dbdc313227630239ff",
+            "size": 48
+          },
+          "manifest": {
+            "signer": {
+              "sha256": [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            },
+            "versionCode": 2,
+            "versionName": "2.0"
+          }
+        },
+        "caccb63c59892e0445caf3642f769e56034c994a4c4aba3c0f13fb760bc04d00": {
+          "added": 1789000000000,
+          "file": {
+            "name": "/org.example.app_1.apk",
+            "sha256": "caccb63c59892e0445caf3642f769e56034c994a4c4aba3c0f13fb760bc04d00",
+            "size": 48
+          },
+          "manifest": {
+            "signer": {
+              "sha256": [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              ]
+            },
+            "versionCode": 1,
+            "versionName": "1.0"
+          }
+        }
+      }
+    }
+  },
+  "repo": {
+    "address": "https://example.org/fdroid/repo",
+    "description": {
+      "en-US": "Signed fixture"
+    },
+    "name": {
+      "en-US": "Fixture"
+    },
+    "timestamp": 1789000000000
+  }
+}

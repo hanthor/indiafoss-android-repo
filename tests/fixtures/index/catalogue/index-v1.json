@@ -1,0 +1,41 @@
+{
+  "apps": [
+    {
+      "name": "Fixture app",
+      "packageName": "org.example.app",
+      "suggestedVersionCode": "2"
+    }
+  ],
+  "packages": {
+    "org.example.app": [
+      {
+        "added": 1789000000000,
+        "apkName": "org.example.app_2.apk",
+        "hash": "6d4f0a1063a5940cb19337ade2d37f37f4ccba1048a223dbdc313227630239ff",
+        "hashType": "sha256",
+        "packageName": "org.example.app",
+        "signer": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "size": 48,
+        "versionCode": 2,
+        "versionName": "2.0"
+      },
+      {
+        "added": 1789000000000,
+        "apkName": "org.example.app_1.apk",
+        "hash": "caccb63c59892e0445caf3642f769e56034c994a4c4aba3c0f13fb760bc04d00",
+        "hashType": "sha256",
+        "packageName": "org.example.app",
+        "signer": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "size": 48,
+        "versionCode": 1,
+        "versionName": "1.0"
+      }
+    ]
+  },
+  "repo": {
+    "address": "https://example.org/fdroid/repo",
+    "name": "Fixture",
+    "timestamp": 1789000000000,
+    "version": 20002
+  }
+}

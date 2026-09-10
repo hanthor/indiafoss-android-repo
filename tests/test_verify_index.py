@@ -36,7 +36,7 @@ class VerifyIndexTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.repo = Path(self.directory.name) / "repo"
-        shutil.copytree(FIXTURE / "repo", self.repo)
+        shutil.copytree(FIXTURE / "catalogue", self.repo)
         for code in (1, 2):
             (self.repo / f"{PACKAGE}_{code}.apk").write_bytes(payload(PACKAGE, code))
         self.policy = json.loads((FIXTURE / "policy.json").read_text())
@@ -117,7 +117,7 @@ class VerifyIndexTests(unittest.TestCase):
         self.rewrite_jar("entry.jar", drop=self.signature_names(self.repo / "entry.jar"))
         with self.assertRaisesRegex(Rejected, "exactly one JAR signature"):
             self.verify()
-        shutil.copyfile(FIXTURE / "repo" / "entry.jar", self.repo / "entry.jar")
+        shutil.copyfile(FIXTURE / "catalogue" / "entry.jar", self.repo / "entry.jar")
         with zipfile.ZipFile(FIXTURE / "other-entry.jar") as other, \
                 zipfile.ZipFile(self.repo / "entry.jar", "a") as archive:
             for name in self.signature_names(FIXTURE / "other-entry.jar"):
@@ -130,7 +130,7 @@ class VerifyIndexTests(unittest.TestCase):
         (self.repo / "entry.json").write_text(json.dumps(entry))
         with self.assertRaisesRegex(Rejected, "entry.json on disk differs"):
             self.verify()
-        shutil.copyfile(FIXTURE / "repo" / "entry.json", self.repo / "entry.json")
+        shutil.copyfile(FIXTURE / "catalogue" / "entry.json", self.repo / "entry.json")
         index = json.loads((self.repo / "index-v2.json").read_text())
         (self.repo / "index-v2.json").write_text(json.dumps(index))
         with self.assertRaisesRegex(Rejected, "entry.json does not match index-v2.json"):
@@ -298,7 +298,7 @@ class PublishSiteTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
         self.repo = self.root / "repo"
-        shutil.copytree(FIXTURE / "repo", self.repo)
+        shutil.copytree(FIXTURE / "catalogue", self.repo)
         for code in (1, 2):
             (self.repo / f"{PACKAGE}_{code}.apk").write_bytes(payload(PACKAGE, code))
         (self.repo / "status").mkdir()

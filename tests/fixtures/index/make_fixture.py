@@ -1,6 +1,6 @@
 """Regenerate the signed catalogue fixture with a throwaway key (needs keytool and jarsigner).
 
-Writes repo/ (entry.jar, entry.json, index-v2.json, index-v1.jar, index-v1.json),
+Writes catalogue/ (entry.jar, entry.json, index-v2.json, index-v1.jar, index-v1.json),
 other-entry.jar (signed by a second, discarded key) and policy.json carrying the
 fixture key's fingerprint. Both keys are created in a temporary directory and
 deleted; nothing here is an IndiaFOSS key. The "APKs" are the bytes returned by
@@ -51,7 +51,7 @@ def sign(store, alias, jar, payload_name, content, deprecated=False):
 
 
 def main():
-    repo = HERE / "repo"
+    repo = HERE / "catalogue"
     repo.mkdir(exist_ok=True)
     versions_v2, versions_v1 = {}, []
     for code, name in VERSIONS:
