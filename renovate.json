@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "fdroidserver 2.4.5 requires ruamel.yaml<0.17.22; a newer pin cannot install under --require-hashes.",
+      "matchDatasources": ["pypi"],
+      "matchPackageNames": ["ruamel-yaml", "ruamel.yaml"],
+      "allowedVersions": "<0.17.22"
+    }
   ]
 }
