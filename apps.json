@@ -1,7 +1,7 @@
 {
   "repository": {
     "address": "https://hanthor.github.io/indiafoss-android-repo/fdroid/repo",
-    "fingerprint": ""
+    "fingerprint": "ad932c530715e9caa39415f94e007002fb3da0dd2583ff92dfc7f6dfe46cccc2"
   },
   "org.indiafoss.companion.nativeapp": {
     "source": "hanthor/indiafoss-companion",

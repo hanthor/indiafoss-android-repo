@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "package": "org.indiafoss.companion.nativeapp",
+    "source": "hanthor/indiafoss-companion",
+    "commit": "b8220024192d287ffa3a73100bb120fc22ed67e6",
+    "release_id": 380943564,
+    "asset_id": 572084493,
+    "version_code": 1243,
+    "sha256": "13a9069364899a279036cf90a5486aa23818a5b9e0ba01090a215b1a36bd8814"
+  }
+]
