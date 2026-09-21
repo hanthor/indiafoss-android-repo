@@ -906,9 +906,9 @@ mutf8==1.1.0 \
     --hash=sha256:fce9b80cd05214a2c886ee936e587db381ea10f4c4d45ba81689c0b9b76e6ebb \
     --hash=sha256:fea1eaa3fc7e9da366b9199d19540d311eb2c953436936b96c6c1f9e81ebf501
     # via androguard
-networkx==3.6.1 \
-    --hash=sha256:26b7c357accc0c8cde558ad486283728b65b6a95d85ee1cd66bafab4c8168509 \
-    --hash=sha256:d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762
+networkx==3.7 \
+    --hash=sha256:e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0 \
+    --hash=sha256:fd77a511bd90f39f3d016351345b52cf5319b813bdca01de3f755d3cca62e96a
     # via androguard
 oscrypto==1.3.0 \
     --hash=sha256:2b2f1d2d42ec152ca90ccb5682f3e051fb55986e1b170ebde472b133713e7085 \
