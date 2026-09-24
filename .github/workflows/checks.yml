@@ -76,7 +76,7 @@ jobs:
       - name: Generate and inspect the unsigned fixture catalogue
         run: |
           export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"
-          python build_catalogue.py --staging staging --history history.json \
+          python build_catalogue.py --staging staging --history tests/fixtures/catalogue/history.json \
             --record tests/fixtures/catalogue/record.json \
             --policy tests/fixtures/catalogue/policy.json \
             --metadata tests/fixtures/catalogue/metadata --workdir build
@@ -84,14 +84,14 @@ jobs:
       - name: verify_index.py must refuse to pass an unsigned catalogue by default
         run: |
           set +e
-          python verify_index.py build/repo --history history.json \
+          python verify_index.py build/repo --history tests/fixtures/catalogue/history.json \
             --record tests/fixtures/catalogue/record.json --policy tests/fixtures/catalogue/policy.json
           status=$?
           set -e
           test "$status" -eq 2 || { echo "expected exit 2 (unsigned catalogue), got $status"; exit 1; }
       - name: Content checks of the unsigned preview (explicitly expected unsigned)
         run: |
-          python verify_index.py build/repo --history history.json \
+          python verify_index.py build/repo --history tests/fixtures/catalogue/history.json \
             --record tests/fixtures/catalogue/record.json --policy tests/fixtures/catalogue/policy.json \
             --expect-unsigned
       - name: Check no secrets or key material in the output
@@ -165,22 +165,22 @@ jobs:
       - name: Sign, verify, assemble and verify the deploy set
         run: |
           export PATH="$ANDROID_HOME/build-tools/36.0.0:$PATH"
-          python build_catalogue.py --staging staging --history history.json \
+          python build_catalogue.py --staging staging --history tests/fixtures/catalogue/history.json \
             --record tests/fixtures/catalogue/record.json --policy tests/fixtures/catalogue/policy.json \
             --metadata tests/fixtures/catalogue/metadata --workdir build --config "$RUNNER_TEMP/config.yml"
           (cd build && fdroid lint)
           rm -f build/config.yml "$RUNNER_TEMP/config.yml"
-          python verify_index.py build/repo --history history.json \
+          python verify_index.py build/repo --history tests/fixtures/catalogue/history.json \
             --record tests/fixtures/catalogue/record.json --policy rehearsal-policy.json
           python publish_site.py build/repo site
-          python verify_index.py site/fdroid/repo --history history.json \
+          python verify_index.py site/fdroid/repo --history tests/fixtures/catalogue/history.json \
             --record tests/fixtures/catalogue/record.json --policy rehearsal-policy.json --deployable
           test ! -e site/fdroid/repo/status
           ! find site -name 'config.yml' -o -name '*.p12' | grep .
       - name: A wrong recorded fingerprint must be rejected
         run: |
           sed 's/"fingerprint": "[0-9a-f]\{8\}/"fingerprint": "00000000/' rehearsal-policy.json > wrong-policy.json
-          if python verify_index.py site/fdroid/repo --history history.json \
+          if python verify_index.py site/fdroid/repo --history tests/fixtures/catalogue/history.json \
               --record tests/fixtures/catalogue/record.json --policy wrong-policy.json; then
             echo "verify_index.py accepted a wrong fingerprint"; exit 1
           fi
