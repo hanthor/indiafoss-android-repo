@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from verify_apk import Rejected, inspect_apk, verify
+from verify_apk import Rejected, inspect_apk, prior_to, validate_record, verify
 
 
 class PromotionTests(unittest.TestCase):
@@ -28,6 +28,18 @@ class PromotionTests(unittest.TestCase):
     def test_accepts_matching_release_and_idempotent_recheck(self):
         self.assertEqual(self.check()["package"], "org.example.app")
         self.check([dict(self.record)])
+
+    def test_a_listed_build_is_checked_only_against_the_builds_before_it(self):
+        older = dict(self.record)
+        newer = dict(self.record, version_code=3, sha256="d" * 64)
+        history = [older, newer]
+        self.assertEqual(prior_to(older, history), [])
+        self.assertEqual(prior_to(newer, history), [older])
+        validate_record(older, self.policy, prior_to(older, history))
+        # A new record not in the history must still clear all of it.
+        with self.assertRaisesRegex(Rejected, "regression"):
+            stale = dict(older, version_code=1, sha256="e" * 64)
+            validate_record(stale, self.policy, prior_to(stale, history))
 
     def test_rejects_changed_bytes(self):
         self.apk.write_bytes(b"changed")

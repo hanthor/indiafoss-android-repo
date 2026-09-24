@@ -20,6 +20,16 @@ def digest(value):
     return isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) is not None
 
 
+def prior_to(record, history):
+    """What `record` must not regress from: the history before it when it is
+    already listed there, otherwise all of it."""
+    for index, entry in enumerate(history):
+        if (entry.get("package"), entry.get("version_code"), entry.get("sha256")) == (
+                record.get("package"), record.get("version_code"), record.get("sha256")):
+            return history[:index]
+    return history
+
+
 def validate_record(record, policy, history):
     package = record.get("package")
     require(isinstance(package, str) and package in policy and package != "repository",
