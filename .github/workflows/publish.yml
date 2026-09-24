@@ -176,6 +176,7 @@ jobs:
           python - <<'PY'
           import json, os, subprocess
           from pathlib import Path
+          from verify_apk import prior_to
           records = json.loads(Path("history.json").read_text())
           if Path("promotion.json").exists():
               records.append(json.loads(Path("promotion.json").read_text()))
@@ -183,10 +184,14 @@ jobs:
               raise SystemExit("::error::history.json is empty and no record was given: nothing to publish")
           scratch = Path("records"); scratch.mkdir()
           home = os.environ["ANDROID_HOME"]
+          history = json.loads(Path("history.json").read_text())
           for number, record in enumerate(records):
               path = scratch / f"{number}.json"
               path.write_text(json.dumps(record))
-              subprocess.run(["python", "stage_release.py", str(path), "--history", "history.json",
+              # A build already in the history is checked against the builds before it.
+              earlier = scratch / f"{number}.history.json"
+              earlier.write_text(json.dumps(prior_to(record, history)))
+              subprocess.run(["python", "stage_release.py", str(path), "--history", str(earlier),
                               "--destination", "staging",
                               "--apksigner", f"{home}/build-tools/36.0.0/apksigner",
                               "--apkanalyzer", f"{home}/cmdline-tools/19.0/bin/apkanalyzer"],

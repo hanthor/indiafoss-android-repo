@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import tempfile
 
-from verify_apk import Rejected, require, validate_record
+from verify_apk import prior_to, Rejected, require, validate_record
 
 SIGNING_KEYS = ("repo_keyalias", "keystore", "keystorepass", "keypass")
 SECRET_SUFFIXES = (".jks", ".p12", ".keystore", ".pem", ".key")
@@ -93,7 +93,7 @@ def match_records(staging, policy, history, records):
         require(version.isdigit() and package, f"Unexpected staged file name: {apk.name}")
         record = known.get((package, int(version)))
         require(record is not None, f"No promotion record for {apk.name}")
-        validate_record(record, policy, history)
+        validate_record(record, policy, prior_to(record, history))
         require(policy[package].get("published") is True,
                 f"Package is not in the published allowlist: {package}")
         with apk.open("rb") as handle:
