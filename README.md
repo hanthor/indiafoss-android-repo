@@ -1,9 +1,19 @@
 # IndiaFOSS Android repository
 
-Work in progress: this repository does **not** serve an F-Droid catalogue yet.
-It will distribute reviewed Companion and Chat APKs without changing their
-application signing identities. The index will use a separate signing key,
-which has not been created; the publish workflow refuses to run until it is.
+The **IndiaFOSS Preview** F-Droid repository is live. It distributes reviewed
+Companion APKs (Chat is not published yet) without changing their application
+signing identities; the index has its own signing key.
+
+Add it in F-Droid, Neo Store or Droid-ify with one link (tap it on the phone):
+
+```
+fdroidrepos://hanthor.github.io/indiafoss-android-repo/fdroid/repo?fingerprint=AD932C530715E9CAA39415F94E007002FB3DA0DD2583FF92DFC7F6DFE46CCCC2
+```
+
+or add `https://hanthor.github.io/indiafoss-android-repo/fdroid/repo` by hand
+and check the fingerprint
+`AD932C530715E9CAA39415F94E007002FB3DA0DD2583FF92DFC7F6DFE46CCCC2`. The
+Companion's Android download card carries the same link and a QR code.
 
 [Implementation plan and acceptance criteria](https://github.com/hanthor/indiafoss-companion/blob/main/docs/tasks/own-fdroid-repository.md)
 · [Tracking issue](https://github.com/hanthor/indiafoss-companion/issues/291)
@@ -139,8 +149,9 @@ wrong fingerprint is rejected. Nothing from that job is uploaded.
 `.github/workflows/publish.yml` is manual only (`workflow_dispatch`) and does
 nothing unless all of the following hold, in this order: the secrets
 `FDROID_KEYSTORE_B64`, `FDROID_KEYSTORE_PASS` and `FDROID_KEY_ALIAS` exist
-(none has been created), `apps.json` records a fingerprint, and the keystore in
-the secret actually holds the key with that fingerprint. It then runs the unit
+`apps.json` records a fingerprint, and the keystore in
+the secret actually holds the key with that fingerprint (all of these are now
+set up). It then runs the unit
 tests, re-downloads every APK in `history.json` (plus an optional
 `promotion_record` input) from its immutable release asset through
 `stage_release.py`, materialises the key under `$RUNNER_TEMP`, generates and
@@ -149,14 +160,23 @@ runs `verify_index.py`, copies only the public files with `publish_site.py` into
 `site/fdroid/repo/`, verifies that tree again with `--deployable`, and only then
 uploads it. The `dry_run` input (default **true**) stops there and uploads the
 signed tree as a workflow artifact; a non-dry run from `main` deploys it to
-GitHub Pages with `actions/deploy-pages`. Deployment needs Pages configured with
-"GitHub Actions" as the source and a `github-pages` environment; neither exists
-yet. No job has `contents: write`: `config.yml`, keystores and APKs never enter
+GitHub Pages with `actions/deploy-pages`. No job has `contents: write`: `config.yml`, keystores and APKs never enter
 git, and the top-level `permissions` is empty.
 
-Dispatching the workflow today stops at the first gate with
-"FDROID_KEYSTORE_B64, FDROID_KEYSTORE_PASS and FDROID_KEY_ALIAS are not all
-configured … refusing to publish (fail closed)".
+## Promoting a new Companion build
+
+Every record in `history.json` is re-downloaded on each publish, so a promoted
+APK must sit on a release asset that never changes. The Companion's rolling
+`nightly` release replaces its assets on every build and cannot be promoted.
+
+1. In hanthor/indiafoss-companion, run **Nightly APK** by hand with **keep**
+   ticked. Besides updating `nightly`, it attaches the same APK to a permanent
+   `android-<version>` release.
+2. Write the promotion record from that release: its `release_id`, the APK's
+   `asset_id`, `commit`, `version_code` (Settings → About, or `1000 + run
+   number`) and the APK's `sha256`.
+3. In a pull request, append the record to `history.json`; merge it.
+4. Run **Publish signed catalogue** with `dry_run` false from `main`.
 
 ## Maintainer steps that remain
 
