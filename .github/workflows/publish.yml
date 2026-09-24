@@ -1,11 +1,13 @@
 name: Publish signed catalogue
 # Fail-closed publication of the IndiaFOSS Preview F-Droid catalogue.
 #
-# Runs only by hand. It refuses to continue unless the three index signing
+# Runs every 20 minutes, publishing the newest green Companion builds from
+# their permanent android-<version> releases (auto_promote.py) when they differ
+# from what is live, and by hand from history.json. It refuses to continue unless the three index signing
 # secrets exist (none are created here) AND apps.json records the repository
 # fingerprint AND the secret keystore actually holds the key with that
 # fingerprint. It re-downloads and re-verifies every promoted APK from the
-# immutable release assets in history.json, signs the index with the pinned
+# immutable release assets in that history, signs the index with the pinned
 # fdroidserver, verifies the result with verify_index.py, and deploys only the
 # generated public files to GitHub Pages under /fdroid/repo/. Nothing is ever
 # committed: no config.yml, no keystore, no APK enters git.
@@ -15,8 +17,16 @@ name: Publish signed catalogue
 #   FDROID_KEYSTORE_PASS  keystore password (also used as the key password)
 #   FDROID_KEY_ALIAS      alias of the index key inside that keystore
 on:
+  # Every 20 minutes: publish the newest green Companion builds kept on
+  # permanent android-<version> releases, if they differ from what is live.
+  schedule:
+    - cron: '*/20 * * * *'
   workflow_dispatch:
     inputs:
+      from_releases:
+        description: Choose the builds from the Companion's permanent releases, as the schedule does
+        type: boolean
+        default: false
       dry_run:
         description: Stop before deployment and upload the signed output as an artifact
         type: boolean
@@ -31,7 +41,38 @@ concurrency:
   group: publish-catalogue
   cancel-in-progress: false
 jobs:
+  select:
+    # By hand the catalogue is history.json (plus any record). On the schedule
+    # auto_promote.py picks the builds, and nothing further runs when its
+    # pick matches what is already live.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.pick.outputs.changed }}
+      automatic: ${{ steps.pick.outputs.automatic }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Pick the builds
+        id: pick
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AUTOMATIC: ${{ github.event_name == 'schedule' || inputs.from_releases }}
+        run: |
+          if [ "$AUTOMATIC" != "true" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "automatic=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "automatic=true" >> "$GITHUB_OUTPUT"
+          python3 auto_promote.py --out auto-history.json --github-output "$GITHUB_OUTPUT"
+
   gate:
+    needs: select
+    if: ${{ needs.select.outputs.changed == 'true' }}
     # Everything below depends on this job. It has no write permissions.
     runs-on: ubuntu-latest
     permissions:
@@ -82,7 +123,7 @@ jobs:
           echo "Keystore fingerprint matches apps.json."
 
   build:
-    needs: gate
+    needs: [select, gate]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -109,6 +150,11 @@ jobs:
           fdroid --version
       - name: Run the policy tests before touching any release
         run: python -m unittest discover -s tests
+      - name: Publish the builds picked from the permanent releases
+        if: ${{ needs.select.outputs.automatic == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python auto_promote.py --out history.json
       - name: Write the optional promotion record
         env:
           PROMOTION_RECORD: ${{ inputs.promotion_record }}
