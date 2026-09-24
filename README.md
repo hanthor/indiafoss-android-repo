@@ -178,96 +178,10 @@ APK must sit on a release asset that never changes. The Companion's rolling
 3. In a pull request, append the record to `history.json`; merge it.
 4. Run **Publish signed catalogue** with `dry_run` false from `main`.
 
-## Maintainer steps that remain
-
-### 1. Provision the index key (once, on a trusted machine)
-
-The index key is separate from both application signing keys and is never
-regenerated on an ordinary build.
-
-```sh
-keytool -genkeypair -keystore indiafoss-preview-index.p12 -storetype PKCS12 \
-  -alias indiafoss-preview-index -keyalg RSA -keysize 4096 -validity 10000 \
-  -dname "CN=IndiaFOSS Preview repository index, O=IndiaFOSS Companion community"
-keytool -exportcert -keystore indiafoss-preview-index.p12 \
-  -alias indiafoss-preview-index -file indiafoss-preview-index.der
-sha256sum indiafoss-preview-index.der      # -> repository.fingerprint (lowercase hex)
-base64 -w0 indiafoss-preview-index.p12     # -> FDROID_KEYSTORE_B64 secret
-```
-
-Use one password for the PKCS#12 store and the key (keytool requires this for
-PKCS#12); it becomes `FDROID_KEYSTORE_PASS`. `FDROID_KEY_ALIAS` is
-`indiafoss-preview-index`. Make the key recoverable before anything is
-published: put the `.p12` and its password in the maintainers' shared password
-manager and on one offline copy, then prove the backup by running
-`keytool -list -keystore <copy>` from it. Losing the key means every installed
-client has to remove and re-add the repository. Never commit the `.p12`,
-the password, or a filled-in `config.yml`; `.gitignore` and CI refuse them.
-
-Record the fingerprint in `apps.json` (`repository.fingerprint`) in a pull
-request. That commit is the trust anchor: `verify_index.py` and the publish
-workflow compare the signed index and the secret keystore against it.
-
-### 2. First signed publication
-
-Enable GitHub Pages with source "GitHub Actions" and create the `github-pages`
-environment restricted to `main`. Add the three secrets. Run **Publish signed
-catalogue** with `dry_run` = true first and inspect the
-`signed-catalogue-dry-run` artifact; then run it with `dry_run` = false from
-`main`. The catalogue is served at `https://hanthor.github.io/indiafoss-android-repo/fdroid/repo/`.
-`history.json` is still empty, so the first run also needs the first
-`promotion_record` and, as part of the same promotion transaction, a pull
-request that appends it to `history.json`.
-
-### 3. "Add repository" link the PWA will show (only after step 4 passes)
-
-Clients pin the repository by its fingerprint, shown as uppercase hex without
-colons. The link, copyable URL and QR code carry the same value:
-
-```
-fdroidrepos://hanthor.github.io/indiafoss-android-repo/fdroid/repo?fingerprint=<FINGERPRINT>
-https://hanthor.github.io/indiafoss-android-repo/fdroid/repo?fingerprint=<FINGERPRINT>
-```
-
-where `<FINGERPRINT>` is `repository.fingerprint` from `apps.json` in
-uppercase. Publish the fingerprint alongside the link (and in the Companion
-docs) so users can compare it with what their client shows; never publish the
-placeholder fingerprint from an unsigned preview.
-
-### 4. Device upgrade rehearsal (remaining acceptance)
-
-On a real device, for Companion (and later Chat):
-
-1. Install the current direct-download APK from the GitHub release, open the
-   app, and create data that must survive: rate a few talks, build an itinerary,
-   add a note and a contact, change a setting.
-2. Add the repository in F-Droid using the fingerprint link and confirm the
-   client shows the recorded fingerprint and lists the app as **installed**
-   with an update available (or up to date) rather than as a different app.
-3. Install the update from the repository. It must install in place (same
-   package and same application signing certificate, no uninstall prompt) and
-   all data from step 1 must still be there.
-4. Repeat step 2–3 with a second compatible client (for example Droid-ify or
-   Neo Store).
-5. Repeat for the reverse path: installed from the repository, then sideload
-   the next direct-download APK; data must again be retained.
-6. Record the device, Android version, client versions, version codes and the
-   outcome in the tracking issue. Only after this passes add the
-   fingerprint-bearing link to the PWA.
-
 ## Next steps
 
 1. Bind the APK to its declared build commit using verified release provenance.
-2. Exercise fetching and immutable staging plus the verifier
-   against real signed APKs with pinned Android SDK tools in CI.
-3. Maintainer: provision the recoverable index key, record its fingerprint in
-   `apps.json`, create the three secrets, enable Pages, and run the publish
-   workflow (dry run, then real). No key exists yet and nothing is deployed.
-4. Maintainer: run the device upgrade rehearsal above with attendee data
-   retained. Add the fingerprint-bearing PWA link only afterwards.
-
-Chat remains excluded from publication until a signed public release is verified.
-The Companion APK is currently available from its GitHub nightly release.
+2. Publish Chat once a signed public release is verified; it is excluded until then.
 
 Tool references: [APK Analyzer](https://developer.android.com/tools/apkanalyzer),
 [apksigner](https://developer.android.com/tools/apksigner),
