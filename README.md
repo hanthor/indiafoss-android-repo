@@ -146,10 +146,10 @@ wrong fingerprint is rejected. Nothing from that job is uploaded.
 
 ## Publication workflow (fail closed)
 
-`.github/workflows/publish.yml` is manual only (`workflow_dispatch`) and does
-nothing unless all of the following hold, in this order: the secrets
-`FDROID_KEYSTORE_B64`, `FDROID_KEYSTORE_PASS` and `FDROID_KEY_ALIAS` exist
-`apps.json` records a fingerprint, and the keystore in
+`.github/workflows/publish.yml` runs on a schedule (below) and by hand
+(`workflow_dispatch`), and does nothing unless all of the following hold, in
+this order: the secrets `FDROID_KEYSTORE_B64`, `FDROID_KEYSTORE_PASS` and
+`FDROID_KEY_ALIAS` exist, `apps.json` records a fingerprint, and the keystore in
 the secret actually holds the key with that fingerprint (all of these are now
 set up). It then runs the unit
 tests, re-downloads every APK in `history.json` (plus an optional
@@ -163,20 +163,19 @@ signed tree as a workflow artifact; a non-dry run from `main` deploys it to
 GitHub Pages with `actions/deploy-pages`. No job has `contents: write`: `config.yml`, keystores and APKs never enter
 git, and the top-level `permissions` is empty.
 
-## Promoting a new Companion build
+## New Companion builds publish themselves
 
-Every record in `history.json` is re-downloaded on each publish, so a promoted
-APK must sit on a release asset that never changes. The Companion's rolling
-`nightly` release replaces its assets on every build and cannot be promoted.
+Every Companion build on `main` also keeps its APK on a permanent
+`android-<version>` release (the rolling `nightly` release replaces its assets
+and cannot be promoted). Every 20 minutes **Publish signed catalogue** runs
+`auto_promote.py`: it takes the three newest of those releases whose signing
+certificate matches `apps.json` and whose source commit passed the required
+CI, never below `history.json` or the version already live, and publishes
+them only if they differ from what is live. A build therefore reaches the
+repository shortly after its CI goes green, with nothing to write by hand.
 
-1. In hanthor/indiafoss-companion, run **Nightly APK** by hand with **keep**
-   ticked. Besides updating `nightly`, it attaches the same APK to a permanent
-   `android-<version>` release.
-2. Write the promotion record from that release: its `release_id`, the APK's
-   `asset_id`, `commit`, `version_code` (Settings → About, or `1000 + run
-   number`) and the APK's `sha256`.
-3. In a pull request, append the record to `history.json`; merge it.
-4. Run **Publish signed catalogue** with `dry_run` false from `main`.
+`history.json` is now the floor for that choice and the history a hand-run
+publish uses; a hand run can still add an exact `promotion_record`.
 
 ## Next steps
 
