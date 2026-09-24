@@ -7,3 +7,7 @@ from the fdroidserver 2.4.5 source distribution (sha256
 extracts the APK into a staging directory and runs `build_catalogue.py` with this
 fixture policy and metadata. The `commit`, `release_id` and `asset_id` values are
 placeholders: no GitHub preflight runs on the fixture. Nothing here is an IndiaFOSS app.
+
+`history.json` is the fixture's own empty promotion history. The CI catalogue
+jobs use it instead of the real `history.json`, whose Companion records the
+fixture policy rightly refuses.
