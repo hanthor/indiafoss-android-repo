@@ -17,7 +17,7 @@ jobs:
         # jarsigner for the real-signature test in tests/test_verify_index.py
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '25'
       - run: python -m unittest discover -s tests -v
       - run: python -m compileall -q verify_apk.py stage_release.py build_catalogue.py verify_index.py publish_site.py tests
       - name: Refuse APKs, keystores and publisher config in git
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '25'
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
           cmdline-tools-version: 12266719
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '25'
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
         with:
           cmdline-tools-version: 12266719
